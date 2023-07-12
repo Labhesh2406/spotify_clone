@@ -10,7 +10,7 @@ class Playlist extends StatelessWidget {
         physics: ScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 15 / 5.5,
+          childAspectRatio: 16 / 5.5,
         ),
         children: Data().playlist.map(
           (val) {

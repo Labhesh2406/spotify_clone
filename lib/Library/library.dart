@@ -64,7 +64,9 @@ class Library extends StatelessWidget {
           ),
           ...Data().library.map((val) {
             return GFListTile(
+              color: Colors.transparent,
               avatar: GFAvatar(
+                backgroundColor: Colors.transparent,
                 backgroundImage: AssetImage(val['image'].toString()),
                 radius: 30,
                 shape: val['shape'] as dynamic,

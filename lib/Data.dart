@@ -47,7 +47,8 @@ class Data {
       'image': 'assets/images/gentleguitar.png',
       'shape': GFAvatarShape.square,
       'alignment': CrossAxisAlignment.start,
-      'audio': 'https://www.computerhope.com/jargon/m/example.mp3'
+      'audio':
+          'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/2e/e2/7d/2ee27d35-5e1e-0fd0-42ea-359b5256403e/mzaf_9335390342361255150.plus.aac.p.m4a'
     },
     {
       'name': 'Alicia Keys',

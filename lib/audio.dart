@@ -1,9 +1,14 @@
+import 'package:audioplayers/audioplayers.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:spotify_clone/Utils/notify.dart';
 
 class AudioPlayerPro extends StatefulWidget {
-  const AudioPlayerPro(
+  AudioPlayerPro(
       {super.key,
       required this.audioURL,
       required this.image,
@@ -18,11 +23,55 @@ class AudioPlayerPro extends StatefulWidget {
 }
 
 class _AudioPlayerProState extends State<AudioPlayerPro> {
+  Notify notify = Get.find();
+
+  Duration _duration = Duration();
+  Duration _position = Duration();
+
+  static AudioPlayer advancedPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    initPlayer();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void initPlayer() {
+    advancedPlayer = AudioPlayer();
+    advancedPlayer.onDurationChanged.listen((d) {
+      setState(() {
+        _duration = d;
+      });
+    });
+
+    advancedPlayer.onPositionChanged.listen((p) {
+      setState(() {
+        _position = p;
+      });
+    });
+  }
+
+  void seekToSecond(second) {
+    Duration newDuration = Duration(seconds: second);
+    advancedPlayer.seek(newDuration);
+  }
+
+  double setChanged() {
+    Duration newDuration = Duration(seconds: 0);
+    advancedPlayer.seek(newDuration);
+    return 0.0;
+  }
+
   @override
   Widget build(BuildContext context) {
     WidgetsFlutterBinding.ensureInitialized();
     SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(statusBarColor: Colors.transparent),
+      const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
     );
     return Scaffold(
       body: Container(
@@ -122,11 +171,22 @@ class _AudioPlayerProState extends State<AudioPlayerPro> {
                       ],
                     ),
                     IconButton(
-                      onPressed: () {},
-                      icon: Icon(
-                        LineIcons.heart,
-                        color: Colors.white,
-                        size: 24,
+                      onPressed: () {
+                        notify.isHeartPressed.value =
+                            notify.isHeartPressed.value ? false : true;
+                      },
+                      icon: Obx(
+                        () => (notify.isHeartPressed.value)
+                            ? Icon(
+                                Icons.favorite,
+                                color: Colors.green,
+                                size: 24,
+                              )
+                            : Icon(
+                                LineIcons.heart,
+                                color: Colors.white,
+                                size: 24,
+                              ),
                       ),
                     ),
                   ],
@@ -148,8 +208,18 @@ class _AudioPlayerProState extends State<AudioPlayerPro> {
                             enabledThumbRadius: 4,
                           )),
                       child: Slider(
-                        value: 0,
-                        onChanged: (value) {},
+                        value: (_position.inSeconds.toDouble() !=
+                                _duration.inSeconds.toDouble())
+                            ? _position.inSeconds.toDouble()
+                            : setChanged(),
+                        onChanged: (value) {
+                          setState(() {
+                            seekToSecond(value.toInt());
+                            value = value;
+                          });
+                        },
+                        max: _duration.inSeconds.toDouble(),
+                        min: 0,
                       ),
                     ),
                   ),
@@ -159,7 +229,7 @@ class _AudioPlayerProState extends State<AudioPlayerPro> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "0:00",
+                          "${_position.inMinutes.toInt()}:${(_position.inSeconds % 60).toString().padLeft(2, "0")}",
                           style: TextStyle(
                             color: Colors.grey.shade400,
                             fontFamily: 'ProximaNovaThin',
@@ -167,7 +237,7 @@ class _AudioPlayerProState extends State<AudioPlayerPro> {
                           ),
                         ),
                         Text(
-                          "0:00",
+                          "${_duration.inMinutes.toInt()}:${(_duration.inSeconds % 60).toString().padLeft(2, "0")}",
                           style: TextStyle(
                               color: Colors.grey.shade400,
                               fontFamily: 'ProximaNovaThin',
@@ -204,10 +274,58 @@ class _AudioPlayerProState extends State<AudioPlayerPro> {
                         child: IconButton(
                           iconSize: 70,
                           alignment: Alignment.center,
-                          onPressed: () {},
-                          icon: Icon(
-                            Icons.play_circle_filled,
-                            color: Colors.white,
+                          onPressed: () {
+                            notify.isIconPlay.value =
+                                notify.isIconPlay.value ? false : true;
+
+                            if (notify.isIconPlay.value) {
+                              advancedPlayer.play(UrlSource(widget.audioURL));
+                            } else {
+                              advancedPlayer.pause();
+                            }
+                            AwesomeNotifications().createNotification(
+                                content: NotificationContent(
+                                  id: 123,
+                                  channelKey: "basic",
+                                  title: 'Now playing - ${widget.name}',
+                                  autoDismissible: false,
+                                  displayOnBackground: true,
+                                  payload: {"name": "FlutterCampus"},
+                                ),
+                                actionButtons: [
+                                  NotificationActionButton(
+                                    key: 'play',
+                                    label: 'play',
+                                    autoDismissible: false,
+                                    showInCompactView: true,
+                                    actionType: ActionType.KeepOnTop,
+                                  ),
+                                  NotificationActionButton(
+                                    key: 'pause',
+                                    label: 'pause',
+                                    autoDismissible: false,
+                                    showInCompactView: true,
+                                    actionType: ActionType.KeepOnTop,
+                                  ),
+                                  NotificationActionButton(
+                                    key: 'stop',
+                                    label: 'stop',
+                                    autoDismissible: false,
+                                    showInCompactView: true,
+                                    actionType: ActionType.KeepOnTop,
+                                  ),
+                                ]);
+                          },
+                          icon: Obx(
+                            () => (notify.isIconPlay.value)
+                                ? Icon(
+                                    Icons.pause_circle_filled,
+                                    color: Colors.white,
+                                  )
+                                : Icon(
+                                    Icons.play_circle_filled,
+                                    color: Colors.white,
+                                  ),
                           ),
                         ),
                       ),
@@ -217,6 +335,7 @@ class _AudioPlayerProState extends State<AudioPlayerPro> {
                       child: Icon(
                         Icons.skip_next,
                         color: Colors.white,
+                        size: 40,
                       ),
                     ),
                     Icon(
@@ -239,7 +358,9 @@ class _AudioPlayerProState extends State<AudioPlayerPro> {
                       flex: 5,
                     ),
                     InkWell(
-                      onTap: () {},
+                      onTap: () {
+                        Share.share("https://spotify/songid-32919109");
+                      },
                       child: Icon(
                         Icons.share_outlined,
                         color: Colors.grey.shade400,
